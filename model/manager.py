@@ -22,8 +22,8 @@ class ModelManager:
         else:
             # Компиляция модели
             self.__model.compile(optimizer=tf.keras.optimizers.Adam(),
-                          loss='sparse_categorical_crossentropy',
-                          metrics=['accuracy'])
+                                 loss='sparse_categorical_crossentropy',
+                                 metrics=['accuracy'])
             return self.__model
 
     def save(self,

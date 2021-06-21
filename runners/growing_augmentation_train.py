@@ -1,8 +1,10 @@
-from tensorflow import keras
 import os
 
 from model.manager import ModelManager
+
 from augmentation.manager import AugmentationManager
+
+from ml_flow_setup.base import BaseMLFlowSetup
 
 
 class AugmentationTrainRunner:
@@ -11,7 +13,7 @@ class AugmentationTrainRunner:
         self.__augmentation_manager = AugmentationManager()
 
     def run_train(self,
-                  epochs: int=5,
+                  epochs: int=10,
                   multiplicity: int=1,
                   model_path: str=None):
         '''Training Loop on default FASHION MNIST dataset
@@ -27,15 +29,24 @@ class AugmentationTrainRunner:
             multiplicity=multiplicity)
 
         # Обучение
-        self.__model_manager.get_model().fit(x=augmented_train_images,
-                                             y=ext_train_labels,
-                                             epochs=epochs)
+        history = self.__model_manager.get_model().fit(x=augmented_train_images,
+                                                       y=ext_train_labels,
+                                                       epochs=epochs)
+        metrics = history.history
+        ml_flow_setup = BaseMLFlowSetup()
+        ml_flow_setup.log_metrics(experiment_name='fashion_mnist',
+                                  args_dict={
+                                      'epochs': epochs,
+                                      'multiplicity': multiplicity
+                                  },
+                                  growing_aug_train_loss=metrics['loss'],
+                                  growing_aug_train_acc=metrics['accuracy'])
 
         # Сохраненние модели
         model_dir = os.path.dirname(model_path) if model_path is not None \
             else 'saved_models'
-        model_name = 'augmentation_fashion_mnist_train_boosted' if model_path is not None \
-            else 'augmentation_fashion_mnist_train'
+        model_name = 'growing_augmentation_fashion_mnist_train_boosted' if model_path is not None \
+            else 'growing_augmentation_fashion_mnist_train'
         self.__model_manager.save(directory_path=model_dir, model_name=model_name)
 
 

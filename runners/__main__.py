@@ -46,6 +46,11 @@ def parse_args():
                               dest='model_path',
                               type=str,
                               required=False)
+    test_parser.add_argument('--multiplicity',
+                             action='store',
+                             dest='multiplicity',
+                             type=int,
+                             required=True)
     test_parser.set_defaults(func=test_main)
 
     return parser.parse_args()
