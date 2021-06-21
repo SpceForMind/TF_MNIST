@@ -1,7 +1,11 @@
 from tensorflow import keras
 import os
 
+from keras.callbacks import EarlyStopping
+
 from model.manager import ModelManager
+
+from ml_flow_setup.base import BaseMLFlowSetup
 
 
 class TrainRunner:
@@ -30,9 +34,29 @@ class TrainRunner:
          test_labels) = self.__dataset.load_data()
 
         # Обучение
-        self.__model_manager.get_model().fit(x=train_images,
+        history = self.__model_manager.get_model().fit(x=train_images,
                                              y=train_labels,
-                                             epochs=epochs)
+                                             epochs=epochs,
+                                             validation_data=(test_images, test_labels),
+                                             callbacks=[
+                                                 EarlyStopping(
+                                                     monitor='val_accuracy',
+                                                     patience=5
+                                                 )
+                                             ]
+        )
+
+        metrics = history.history
+        ml_flow_setup = BaseMLFlowSetup()
+        ml_flow_setup.log_metrics(experiment_name='fashion_mnist',
+                                  args_dict={
+                                      'epochs': epochs,
+                                  },
+                                  train_loss=metrics['loss'],
+                                  train_acc=metrics['accuracy'],
+                                  val_loss=metrics['val_loss'],
+                                  val_acc=metrics['val_accuracy']
+                                  )
 
         # Сохраненние модели
         model_dir = os.path.dirname(model_path) if model_path is not None \

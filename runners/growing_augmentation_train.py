@@ -1,8 +1,11 @@
 import os
+from tensorflow import keras
 
 from model.manager import ModelManager
 
 from augmentation.manager import AugmentationManager
+
+from keras.callbacks import EarlyStopping
 
 from ml_flow_setup.base import BaseMLFlowSetup
 
@@ -28,10 +31,22 @@ class AugmentationTrainRunner:
         augmented_train_images, ext_train_labels = self.__augmentation_manager.growing_augmentation(
             multiplicity=multiplicity)
 
+        (train_images,
+         train_labels), \
+        (test_images,
+         test_labels) = keras.datasets.fashion_mnist.load_data()
+
         # Обучение
         history = self.__model_manager.get_model().fit(x=augmented_train_images,
                                                        y=ext_train_labels,
-                                                       epochs=epochs)
+                                                       epochs=epochs,
+                                                       validation_data=(test_images, test_labels),
+                                                       callbacks=[
+                                                           EarlyStopping(
+                                                               monitor='val_accuracy',
+                                                               patience=5
+                                                           )
+                                                       ])
         metrics = history.history
         ml_flow_setup = BaseMLFlowSetup()
         ml_flow_setup.log_metrics(experiment_name='fashion_mnist',
@@ -40,7 +55,10 @@ class AugmentationTrainRunner:
                                       'multiplicity': multiplicity
                                   },
                                   growing_aug_train_loss=metrics['loss'],
-                                  growing_aug_train_acc=metrics['accuracy'])
+                                  growing_aug_train_acc=metrics['accuracy'],
+                                  growing_aug_val_loss=metrics['val_loss'],
+                                  growing_aug_val_acc=metrics['val_accuracy']
+        )
 
         # Сохраненние модели
         model_dir = os.path.dirname(model_path) if model_path is not None \
