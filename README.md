@@ -75,6 +75,8 @@ During Training Efficiently Decreases Test Error]](https://arxiv.org/pdf/2105.13
 
 Возьмем `k` = 7
 
+Ниже приведен список из 7 аугментаций. Мы будем брать 1 аугментацию из этого списка случайным образом и применять к данным
+
 ```python
 import albumentations as A
 
